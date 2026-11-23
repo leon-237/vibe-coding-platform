@@ -53,7 +53,7 @@
     return `<div class="ring" role="img" aria-label="${esc(label)} : ${p} %">
       <svg viewBox="0 0 120 120"><circle class="ring-track" cx="60" cy="60" r="${r}" fill="none" stroke-width="10"/>
       <circle class="ring-value" cx="60" cy="60" r="${r}" fill="none" stroke-width="10" stroke-linecap="round"
-        stroke-dasharray="${c.toFixed(2)}" stroke-dashoffset="${(c * (1 - p / 100)).toFixed(2)}"/></svg>
+        stroke-dasharray="${c.toFixed(2)}" style="--c:${c.toFixed(2)};--o:${(c * (1 - p / 100)).toFixed(2)};stroke-dashoffset:${(c * (1 - p / 100)).toFixed(2)}"/></svg>
       <div class="ring-label"><strong>${p} %</strong><span>${esc(label)}</span></div></div>`;
   };
   const bar = (percent, tone = "") =>
@@ -112,6 +112,70 @@
   function setView(html) {
     $("#view").innerHTML = html;
     $("#view").focus({ preventScroll: true });
+    countUp();
+  }
+
+  const reduceMotion = () => window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  /* Numbers climb to their real value (points, streak, percentages). */
+  function countUp() {
+    document.querySelectorAll("[data-count]").forEach((el) => {
+      const target = Number(el.dataset.count);
+      const suffix = el.dataset.suffix || "";
+      if (reduceMotion()) { el.textContent = target.toLocaleString("fr-FR") + suffix; return; }
+      const start = performance.now();
+      const step = (now) => {
+        const t = Math.min(1, (now - start) / 900);
+        const eased = 1 - Math.pow(1 - t, 3);
+        el.textContent = Math.round(target * eased).toLocaleString("fr-FR") + suffix;
+        if (t < 1) requestAnimationFrame(step);
+      };
+      requestAnimationFrame(step);
+    });
+  }
+
+  /* "+X XP" floats up after an answer. */
+  function floatXp(amount) {
+    if (!amount) return;
+    const el = document.createElement("div");
+    el.className = "xp-float";
+    el.textContent = `+${amount} XP`;
+    document.body.appendChild(el);
+    el.addEventListener("animationend", () => el.remove());
+    setTimeout(() => el.remove(), 1500);
+  }
+
+  /* Small burst of particles: good results and level ups. */
+  function celebrate() {
+    if (reduceMotion()) return;
+    const layer = document.createElement("div");
+    layer.className = "burst-layer";
+    const colors = ["#E8703F", "#F0A04B", "#3F8F79", "#C98A1B", "#8C5A9A"];
+    for (let i = 0; i < 26; i++) {
+      const dot = document.createElement("i");
+      dot.className = "burst-dot";
+      const angle = (Math.PI * 2 * i) / 26 + Math.random() * 0.3;
+      const dist = 120 + Math.random() * 140;
+      dot.style.setProperty("--x", `${Math.cos(angle) * dist}px`);
+      dot.style.setProperty("--y", `${Math.sin(angle) * dist}px`);
+      dot.style.setProperty("--r", `${Math.random() * 540 - 270}deg`);
+      dot.style.background = colors[i % colors.length];
+      dot.style.animationDelay = `${Math.random() * 0.12}s`;
+      layer.appendChild(dot);
+    }
+    document.body.appendChild(layer);
+    setTimeout(() => layer.remove(), 1400);
+  }
+
+  /* Level up: celebrate once when the stored level is passed. */
+  function checkLevelUp(level) {
+    const key = "parcours.level";
+    const previous = Number(storage.get(key) || 0);
+    if (previous && level > previous) {
+      celebrate();
+      toast(`Niveau ${level} atteint !`, "success");
+    }
+    storage.set(key, String(level));
   }
 
   function pageHead(eyebrow, title, actions = "") {
@@ -259,6 +323,7 @@
     const subjects = dash.subjects;
     const covered = subjects.length ? Math.round(subjects.reduce((a, s) => a + s.covered_percent, 0) / subjects.length) : 0;
     const t = dash.totals;
+    checkLevelUp(dash.gamification_level);
 
     setView(`
       ${pageHead("Accueil", `Bonjour, ${state.me.first_name}`)}
@@ -267,8 +332,8 @@
           ${ring(covered, "du programme couvert")}
           <div class="stack">
             <div class="hero-row">
-              <div class="metric"><span class="section-title">${icon("flame")} Série</span><strong>${dash.streak_days} ${dash.streak_days > 1 ? "jours" : "jour"}</strong></div>
-              <div class="metric"><span class="section-title">${icon("star")} Points</span><strong>${dash.xp.toLocaleString("fr-FR")} XP</strong></div>
+              <div class="metric"><span class="section-title">${icon("flame", dash.streak_days > 0 ? "flame lit" : "flame")} Série</span><strong><span data-count="${dash.streak_days}"></span> ${dash.streak_days > 1 ? "jours" : "jour"}</strong></div>
+              <div class="metric"><span class="section-title">${icon("star")} Points</span><strong><span data-count="${dash.xp}" data-suffix=" XP"></span></strong></div>
             </div>
             <div class="stack" style="gap:10px">
               <p><strong>${dash.due_reviews}</strong> ${dash.due_reviews > 1 ? "questions à réviser" : "question à réviser"} aujourd'hui.</p>
@@ -290,9 +355,9 @@
       </section>
 
       <section class="grid-4">
-        <div class="card metric"><span>Réponses données</span><strong>${t.attempts}</strong></div>
-        <div class="card metric"><span>Taux de réussite</span><strong>${t.correct_percent == null ? "–" : t.correct_percent + " %"}</strong></div>
-        <div class="card metric"><span>Quiz terminés</span><strong>${t.sessions}</strong></div>
+        <div class="card metric"><span>Réponses données</span><strong data-count="${t.attempts}"></strong></div>
+        <div class="card metric"><span>Taux de réussite</span><strong>${t.correct_percent == null ? "–" : `<span data-count="${t.correct_percent}" data-suffix=" %"></span>`}</strong></div>
+        <div class="card metric"><span>Quiz terminés</span><strong data-count="${t.sessions}"></strong></div>
         <div class="card metric"><span>Formule</span><strong>${planLabel(sub.plan)}</strong></div>
       </section>
 
@@ -451,6 +516,7 @@
 
   function showQuizResult(r) {
     const tone = r.score_percent >= 70 ? "success" : r.score_percent >= 50 ? "" : "danger";
+    if (r.score_percent >= 70) setTimeout(celebrate, 350);
     setView(`
       ${pageHead(r.kind === "evaluation" ? "Évaluation terminée" : "Quiz terminé", `${r.score_percent} % de réussite`)}
       <section class="card hero">
@@ -464,7 +530,7 @@
       <section class="card">
         <div class="card-head"><h2>Corrections</h2><span class="badge ${tone}">${r.correct} / ${r.total}</span></div>
         <ol class="stack" style="padding-left:0;list-style:none">
-          ${r.results.map((x, i) => `<li class="card" style="box-shadow:none;background:var(--bg-elev)">
+          ${r.results.map((x, i) => `<li class="card rise ${x.is_correct ? "pop" : "shake"}" style="box-shadow:none;background:var(--bg-elev);animation-delay:${i * 70}ms">
             <div class="row-between"><strong>${i + 1}. ${esc(x.question)}</strong>
               <span class="badge ${x.is_correct ? "success" : "danger"}">${x.is_correct ? "Juste" : "À revoir"}</span></div>
             <div class="stack" style="margin-top:10px;gap:6px">${x.choices.map((c, j) => `
@@ -484,7 +550,7 @@
     state.reviewFeedback = null;
     let body;
     if (feedback) {
-      body = `<section class="card">
+      body = `<section class="card ${feedback.result.is_correct ? "pop" : "shake"}">
         <div class="row-between"><span class="badge ${feedback.result.is_correct ? "success" : "danger"}">${feedback.result.is_correct ? "Bonne réponse" : "Réponse incorrecte"}</span>
           <span class="muted small">Prochaine révision dans ${feedback.result.interval_days} ${feedback.result.interval_days > 1 ? "jours" : "jour"}</span></div>
         <h2 class="question" style="margin-top:12px">${esc(feedback.question)}</h2>
@@ -539,10 +605,10 @@
     setView(`
       ${pageHead("Statistiques", "Votre progression")}
       <section class="grid-4">
-        <div class="card metric"><span>Réponses données</span><strong>${t.attempts}</strong></div>
-        <div class="card metric"><span>Taux de réussite</span><strong>${t.correct_percent == null ? "–" : t.correct_percent + " %"}</strong></div>
-        <div class="card metric"><span>Quiz terminés</span><strong>${t.sessions}</strong></div>
-        <div class="card metric"><span>Révisions en attente</span><strong>${dash.due_reviews}</strong></div>
+        <div class="card metric"><span>Réponses données</span><strong data-count="${t.attempts}"></strong></div>
+        <div class="card metric"><span>Taux de réussite</span><strong>${t.correct_percent == null ? "–" : `<span data-count="${t.correct_percent}" data-suffix=" %"></span>`}</strong></div>
+        <div class="card metric"><span>Quiz terminés</span><strong data-count="${t.sessions}"></strong></div>
+        <div class="card metric"><span>Révisions en attente</span><strong data-count="${dash.due_reviews}"></strong></div>
       </section>
       <section class="card">
         <h2 class="section-title">Par matière</h2>
@@ -574,13 +640,14 @@
   async function viewRewards() {
     const dash = await api("/dashboard");
     const into = dash.xp % 100;
+    checkLevelUp(dash.gamification_level);
     setView(`
       ${pageHead("Récompenses", "Votre niveau")}
       <section class="card hero">
         <div class="ring" role="img" aria-label="Niveau ${dash.gamification_level}">
           <svg viewBox="0 0 120 120"><circle class="ring-track" cx="60" cy="60" r="52" fill="none" stroke-width="10"/>
           <circle class="ring-value" cx="60" cy="60" r="52" fill="none" stroke-width="10" stroke-linecap="round"
-            stroke-dasharray="326.73" stroke-dashoffset="${(326.73 * (1 - into / 100)).toFixed(2)}"/></svg>
+            stroke-dasharray="326.73" style="--c:326.73;--o:${(326.73 * (1 - into / 100)).toFixed(2)};stroke-dashoffset:${(326.73 * (1 - into / 100)).toFixed(2)}"/></svg>
           <div class="ring-label"><strong>${dash.gamification_level}</strong><span>niveau</span></div></div>
         <div class="stack">
           <p><strong>${dash.xp.toLocaleString("fr-FR")} XP</strong> au total.</p>
@@ -589,8 +656,8 @@
         </div>
       </section>
       <section class="grid-4">
-        <div class="card metric"><span class="section-title">${icon("flame")} Série</span><strong>${dash.streak_days} ${dash.streak_days > 1 ? "jours" : "jour"}</strong></div>
-        <div class="card metric"><span class="section-title">${icon("star")} Points XP</span><strong>${dash.xp.toLocaleString("fr-FR")}</strong></div>
+        <div class="card metric"><span class="section-title">${icon("flame", dash.streak_days > 0 ? "flame lit" : "flame")} Série</span><strong><span data-count="${dash.streak_days}"></span> ${dash.streak_days > 1 ? "jours" : "jour"}</strong></div>
+        <div class="card metric"><span class="section-title">${icon("star")} Points XP</span><strong data-count="${dash.xp}"></strong></div>
         <div class="card metric"><span class="section-title">${icon("target")} Niveau</span><strong>${dash.gamification_level}</strong></div>
         <div class="card metric"><span class="section-title">${icon("clock")} À réviser</span><strong>${dash.due_reviews}</strong></div>
       </section>`);
@@ -759,6 +826,7 @@
       });
       state.quizResult = result;
       state.quiz = null;
+      floatXp(result.xp_gained);
       route();
     },
     "quit-quiz": () => { if (confirm("Quitter ce quiz ? Vos réponses ne seront pas enregistrées.")) { state.quiz = null; go("cours"); } },
@@ -767,6 +835,7 @@
       const result = await api(`/reviews/${el.dataset.exercise}/answer`, { method: "POST", body: { choice: Number(el.dataset.choice) } });
       const question = $(".question") ? $(".question").textContent : "";
       state.reviewFeedback = { result, question };
+      floatXp(result.is_correct ? 10 : 2);
       route();
     },
 

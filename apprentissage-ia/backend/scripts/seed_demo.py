@@ -58,6 +58,18 @@ def main() -> None:
         }).json()["access_token"]
         h = {"Authorization": f"Bearer {token}"}
 
+        # The demo account is Premium so the daily AI quota never blocks the seeding.
+        from datetime import datetime, timedelta
+        from sqlalchemy import select
+        from sqlalchemy.orm import Session
+        from app.models import User
+        with Session(get_engine()) as db:
+            user = db.scalar(select(User).where(User.email == EMAIL))
+            user.plan = "premium"
+            user.plan_expires_at = datetime.utcnow() + timedelta(days=365)
+            db.commit()
+
+
         for name, chapters in SUBJECTS.items():
             subject = c.post("/subjects", json={"name": name, "semester": 1}, headers=h).json()
             for pos, title in enumerate(chapters):
@@ -72,17 +84,6 @@ def main() -> None:
                     answers = [{"exercise_id": q["id"], "choice": 0 if i != 1 else 3}
                                for i, q in enumerate(quiz["questions"])]
                     c.post(f"/quizzes/{quiz['session_id']}/submit", json={"answers": answers}, headers=h)
-
-    # The demo account is Premium so the daily AI quota never blocks the seeding.
-    from datetime import datetime, timedelta
-    from sqlalchemy import select
-    from sqlalchemy.orm import Session
-    from app.models import User
-    with Session(get_engine()) as db:
-        user = db.scalar(select(User).where(User.email == EMAIL))
-        user.plan = "premium"
-        user.plan_expires_at = datetime.utcnow() + timedelta(days=365)
-        db.commit()
 
     print(f"Compte de démonstration : {EMAIL} / {PASSWORD}")
 
