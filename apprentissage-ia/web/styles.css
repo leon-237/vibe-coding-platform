@@ -1,23 +1,65 @@
+/* Warm light theme by default: cream background, white cards, terracotta accent,
+   sage success and amber highlights. A warm dark theme (brown, not blue) is used
+   when the system asks for it. */
 :root {
-  --bg: #0B1220;
-  --bg-elev: #0F1828;
-  --surface: #131E33;
-  --surface-2: #1A2740;
-  --line: rgba(148, 170, 210, 0.14);
-  --line-strong: rgba(148, 170, 210, 0.26);
-  --text: #E6ECF7;
-  --muted: #8C9AB4;
-  --accent: #4F8CF7;
-  --accent-soft: rgba(79, 140, 247, 0.14);
-  --success: #3DBE8B;
-  --success-soft: rgba(61, 190, 139, 0.14);
-  --warning: #E2A546;
-  --danger: #E26B6B;
-  --danger-soft: rgba(226, 107, 107, 0.12);
-  --radius: 14px;
-  --radius-sm: 10px;
-  --shadow: 0 1px 0 rgba(255, 255, 255, 0.03) inset, 0 12px 30px rgba(0, 0, 0, 0.25);
+  --bg: #FBF5EC;
+  --bg-elev: #F6EDE0;
+  --surface: #FFFFFF;
+  --surface-2: #F8EFE3;
+  --line: rgba(120, 78, 40, 0.12);
+  --line-strong: rgba(120, 78, 40, 0.24);
+  --text: #2E2218;
+  --muted: #7D6B5B;
+  --accent: #D9572F;
+  --accent-strong: #C2461F;
+  --accent-soft: #FCE4D9;
+  --sage: #3F8F79;
+  --sage-soft: #DCEFE7;
+  --amber: #C98A1B;
+  --amber-soft: #FBEDCF;
+  --plum: #8C5A9A;
+  --plum-soft: #F1E4F4;
+  --success: #3F8F79;
+  --success-soft: #DCEFE7;
+  --warning: #C98A1B;
+  --danger: #C94545;
+  --danger-soft: #FBE3E1;
+  --on-accent: #FFFFFF;
+  --radius: 16px;
+  --radius-sm: 12px;
+  --shadow: 0 1px 2px rgba(120, 78, 40, 0.06), 0 8px 24px rgba(120, 78, 40, 0.08);
+  --hero: linear-gradient(135deg, #E8703F 0%, #F0A04B 100%);
   --font: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #1E1612;
+    --bg-elev: #251C17;
+    --surface: #2D231C;
+    --surface-2: #372A22;
+    --line: rgba(255, 220, 180, 0.12);
+    --line-strong: rgba(255, 220, 180, 0.22);
+    --text: #F7EDE2;
+    --muted: #B8A593;
+    --accent: #F07A4E;
+    --accent-strong: #E4683C;
+    --accent-soft: rgba(240, 122, 78, 0.18);
+    --sage: #6FBFA3;
+    --sage-soft: rgba(111, 191, 163, 0.16);
+    --amber: #F0B451;
+    --amber-soft: rgba(240, 180, 81, 0.16);
+    --plum: #C79AD6;
+    --plum-soft: rgba(199, 154, 214, 0.16);
+    --success: #6FBFA3;
+    --success-soft: rgba(111, 191, 163, 0.16);
+    --warning: #F0B451;
+    --danger: #F08A8A;
+    --danger-soft: rgba(240, 138, 138, 0.14);
+    --on-accent: #2A1A10;
+    --shadow: 0 1px 2px rgba(0, 0, 0, 0.2), 0 10px 26px rgba(0, 0, 0, 0.25);
+    --hero: linear-gradient(135deg, #8E4A2C 0%, #B9703E 100%);
+  }
 }
 
 * { box-sizing: border-box; }
@@ -83,21 +125,21 @@ img, svg { display: block; max-width: 100%; }
 
 /* ---------- Sidebar and tab bar ---------- */
 .brand { display: flex; align-items: center; gap: 10px; padding: 4px 8px 20px; font-weight: 700; }
-.brand-mark { width: 30px; height: 30px; border-radius: 9px; background: var(--accent); display: grid; place-items: center; color: white; }
+.brand-mark { width: 32px; height: 32px; border-radius: 10px; background: var(--hero); display: grid; place-items: center; color: #fff; }
 .nav-link {
   display: flex; align-items: center; gap: 12px;
   padding: 10px 12px; border-radius: var(--radius-sm);
   color: var(--muted); font-weight: 550;
 }
 .nav-link:hover { color: var(--text); background: var(--surface); }
-.nav-link[aria-current="page"] { color: var(--text); background: var(--accent-soft); }
+.nav-link[aria-current="page"] { color: var(--accent-strong); background: var(--accent-soft); font-weight: 650; }
 .sidebar-foot { margin-top: auto; padding: 12px 8px 0; border-top: 1px solid var(--line); font-size: 13px; color: var(--muted); }
 
 .tabbar {
   position: fixed; left: 0; right: 0; bottom: 0; z-index: 20;
   display: grid; grid-template-columns: repeat(5, 1fr);
   padding: 8px 6px calc(8px + env(safe-area-inset-bottom));
-  background: rgba(11, 18, 32, 0.94);
+  background: color-mix(in srgb, var(--bg) 92%, transparent);
   backdrop-filter: blur(12px);
   border-top: 1px solid var(--line);
 }
@@ -120,7 +162,7 @@ img, svg { display: block; max-width: 100%; }
 }
 .card-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 14px; flex-wrap: wrap; }
 .section-title { display: flex; align-items: center; gap: 10px; }
-.section-title .ico { color: var(--accent); }
+.section-title .ico { color: var(--accent-strong); }
 
 .metric { display: grid; gap: 4px; }
 .metric strong { font-size: 22px; font-weight: 650; font-variant-numeric: tabular-nums; }
@@ -143,6 +185,17 @@ img, svg { display: block; max-width: 100%; }
 .bar.success > i { background: var(--success); }
 .bar.warning > i { background: var(--warning); }
 
+/* ---------- Hero card (warm gradient) ---------- */
+.hero-card { background: var(--hero); color: #fff; border: 0; box-shadow: 0 16px 36px rgba(217, 87, 47, 0.25); }
+.hero-card .muted, .hero-card .metric span, .hero-card .section-title { color: rgba(255, 255, 255, 0.86); }
+.hero-card .section-title .ico { color: #FFE2B8; }
+.hero-card .ring-track { stroke: rgba(255, 255, 255, 0.28); }
+.hero-card .ring-value { stroke: #fff; }
+.hero-card .ring-label span { color: rgba(255, 255, 255, 0.9); }
+.hero-card .btn { background: #fff; color: #B8461F; }
+.hero-card .btn:hover { background: #FFF6EC; }
+.hero-card .metric strong { color: #fff; }
+
 /* ---------- Quick access tiles ---------- */
 .tile {
   display: grid; gap: 10px; align-content: start;
@@ -152,7 +205,10 @@ img, svg { display: block; max-width: 100%; }
   transition: border-color .15s ease, transform .15s ease;
 }
 .tile:hover { border-color: var(--line-strong); transform: translateY(-1px); }
-.tile-icon { width: 38px; height: 38px; border-radius: 10px; display: grid; place-items: center; background: var(--accent-soft); color: var(--accent); }
+.tile-icon { width: 42px; height: 42px; border-radius: 12px; display: grid; place-items: center; background: var(--accent-soft); color: var(--accent-strong); }
+.tile.t-sage .tile-icon { background: var(--sage-soft); color: var(--sage); }
+.tile.t-amber .tile-icon { background: var(--amber-soft); color: var(--amber); }
+.tile.t-plum .tile-icon { background: var(--plum-soft); color: var(--plum); }
 .tile small { color: var(--muted); font-weight: 500; font-size: 12.5px; }
 
 /* ---------- Lists ---------- */
@@ -181,18 +237,19 @@ img, svg { display: block; max-width: 100%; }
 .btn {
   display: inline-flex; align-items: center; justify-content: center; gap: 8px;
   min-height: 44px; padding: 0 18px; border-radius: 12px;
-  border: 1px solid transparent; background: var(--accent); color: #fff;
+  border: 1px solid transparent; background: var(--accent); color: var(--on-accent);
   font-weight: 600; cursor: pointer; text-decoration: none; white-space: nowrap;
   transition: filter .15s ease, background .15s ease;
 }
-.btn:hover { filter: brightness(1.08); }
+.btn:hover { background: var(--accent-strong); }
 .btn:disabled { opacity: .5; cursor: not-allowed; filter: none; }
 .btn.small { min-height: 36px; padding: 0 12px; font-size: 13.5px; border-radius: 10px; }
 .btn.ghost { background: transparent; border-color: var(--line-strong); color: var(--text); }
 .btn.ghost:hover { background: var(--surface-2); }
 .btn.danger { background: var(--danger-soft); color: var(--danger); border-color: transparent; }
 .btn.block { width: 100%; }
-.btn.success { background: var(--success); color: #06291c; }
+.btn.success { background: var(--sage); color: #fff; }
+.btn.success:hover { filter: brightness(0.94); }
 
 .field { display: grid; gap: 6px; min-width: 0; }
 .field label, .field .label { font-size: 13px; color: var(--muted); font-weight: 550; }
@@ -230,9 +287,9 @@ input[type="file"] { padding: 8px; font-size: 14px; }
   background: var(--surface-2); color: var(--muted);
 }
 .choice[aria-pressed="true"] { border-color: var(--accent); background: var(--accent-soft); }
-.choice[aria-pressed="true"] .letter { background: var(--accent); color: #fff; }
+.choice[aria-pressed="true"] .letter { background: var(--accent); color: var(--on-accent); }
 .choice.correct { border-color: var(--success); background: var(--success-soft); }
-.choice.correct .letter { background: var(--success); color: #06291c; }
+.choice.correct .letter { background: var(--success); color: #fff; }
 .choice.wrong { border-color: var(--danger); background: var(--danger-soft); }
 .choice.wrong .letter { background: var(--danger); color: #fff; }
 .choice:disabled { cursor: default; }

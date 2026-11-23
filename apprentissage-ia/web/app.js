@@ -262,7 +262,7 @@
 
     setView(`
       ${pageHead("Accueil", `Bonjour, ${state.me.first_name}`)}
-      <section class="card">
+      <section class="card hero-card">
         <div class="hero">
           ${ring(covered, "du programme couvert")}
           <div class="stack">
@@ -283,9 +283,9 @@
         <div class="row-between" style="margin-bottom:10px"><h2>Accès rapide</h2></div>
         <div class="grid-4">
           <a class="tile" href="#/cours"><span class="tile-icon">${icon("book")}</span>Mes cours<small>${subjects.length} ${subjects.length > 1 ? "matières" : "matière"}</small></a>
-          <a class="tile" href="#/revisions"><span class="tile-icon">${icon("refresh")}</span>Révisions<small>${dash.due_reviews} à faire</small></a>
-          <a class="tile" href="#/explications"><span class="tile-icon">${icon("message")}</span>Explications<small>Poser une question</small></a>
-          <a class="tile" href="#/recompenses"><span class="tile-icon">${icon("trophy")}</span>Récompenses<small>Niveau ${dash.gamification_level}</small></a>
+          <a class="tile t-sage" href="#/revisions"><span class="tile-icon">${icon("refresh")}</span>Révisions<small>${dash.due_reviews} à faire</small></a>
+          <a class="tile t-plum" href="#/explications"><span class="tile-icon">${icon("message")}</span>Explications<small>Poser une question</small></a>
+          <a class="tile t-amber" href="#/recompenses"><span class="tile-icon">${icon("trophy")}</span>Récompenses<small>Niveau ${dash.gamification_level}</small></a>
         </div>
       </section>
 
