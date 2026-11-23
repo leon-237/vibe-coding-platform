@@ -60,6 +60,19 @@ class ExplainIn(BaseModel):
     chapter_id: int | None = None
 
 
+def _session_title(db: Session, session: QuizSession) -> str:
+    """Human label for a session: the subject or chapter it was made from."""
+    if session.chapter_id is not None:
+        chapter = db.get(Chapter, session.chapter_id)
+        if chapter is not None:
+            return chapter.title
+    if session.subject_id is not None:
+        subject = db.get(Subject, session.subject_id)
+        if subject is not None:
+            return subject.name
+    return "Quiz"
+
+
 def _public_question(ex: Exercise) -> dict:
     """What the client receives before answering: never the answer index."""
     return {"id": ex.id, "question": ex.question, "choices": ex.choices, "difficulty": ex.difficulty}
@@ -223,6 +236,7 @@ def quiz_history(user: User = Depends(get_current_user), db: Session = Depends(g
         {
             "session_id": s.id,
             "kind": s.kind,
+            "title": _session_title(db, s),
             "submitted_at": s.submitted_at,
             "total": s.total,
             "correct": s.correct,
@@ -351,10 +365,18 @@ def dashboard(user: User = Depends(get_current_user), db: Session = Depends(get_
         "subjects": subject_stats,
         "weakest_chapters": weakest,
         "recent_sessions": [
-            {"session_id": s.id, "kind": s.kind, "submitted_at": s.submitted_at,
+            {"session_id": s.id, "kind": s.kind, "title": _session_title(db, s),
+             "submitted_at": s.submitted_at,
              "score_percent": round(100 * s.correct / s.total) if s.total else 0}
             for s in recent
         ],
+        "totals": {
+            "attempts": len(attempts),
+            "correct_percent": round(100 * sum(a.is_correct for a in attempts) / len(attempts))
+            if attempts else None,
+            "sessions": db.query(QuizSession).filter(
+                QuizSession.user_id == user.id, QuizSession.status == "submitted").count(),
+        },
         "recommendation": _recommend(weakest, due_count),
     }
 

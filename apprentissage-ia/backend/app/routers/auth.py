@@ -137,6 +137,12 @@ def login(body: LoginIn, db: Session = Depends(get_db)) -> dict:
     return {"access_token": create_token(user.id), "user": user_out(user)}
 
 
+@router.get("/countries")
+def countries() -> list[dict]:
+    """Public list used by the registration form."""
+    return [{"code": c.code, "name": c.name, "currency": c.currency} for c in COUNTRIES.values()]
+
+
 @router.get("/me")
 def me(user: User = Depends(get_current_user)) -> dict:
     return user_out(user)
