@@ -19,6 +19,11 @@ _session_factory: sessionmaker[Session] | None = None
 def init_engine(url: str | None = None) -> Engine:
     global _engine, _session_factory
     url = url or get_settings().database_url
+    # Hosts such as Render give "postgres://" or "postgresql://" URLs; use the psycopg 3 driver.
+    if url.startswith("postgres://"):
+        url = "postgresql+psycopg://" + url[len("postgres://"):]
+    elif url.startswith("postgresql://"):
+        url = "postgresql+psycopg://" + url[len("postgresql://"):]
     connect_args = {"check_same_thread": False} if url.startswith("sqlite") else {}
     _engine = create_engine(url, connect_args=connect_args)
     _session_factory = sessionmaker(bind=_engine, expire_on_commit=False)
